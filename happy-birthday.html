@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Marcellus&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+  /* ============================================================
+     EDIT THESE — the only things you need to touch
+     ============================================================ */
+  :root{
+    --her-name: "My Love";       /* used only as fallback text, real name set in JS below */
+  }
+
+  /* ------------------------------------------------------------
+     Design tokens
+     ------------------------------------------------------------
+     bg-void:      #0b0708  near-black, warm not cold
+     bg-ember:     #1a0d0f  secondary panel tone
+     crimson:      #a8263a  primary accent
+     ember-gold:   #c9975a  secondary accent / warmth
+     ivory:        #f3e9e2  primary text
+     ash:          #8a7873  muted text
+  */
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:#0b0708;
+    color:#f3e9e2;
+    font-family:'Jost', sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* film grain + vignette, sits over everything */
+  .grain{
+    position:fixed; inset:0; pointer-events:none; z-index:999;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity:.05; mix-blend-mode:overlay;
+  }
+  .vignette{
+    position:fixed; inset:0; pointer-events:none; z-index:998;
+    background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.55) 100%);
+  }
+
+  section{
+    min-height:100vh; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; text-align:center; padding:8vh 6vw;
+  }
+
+  .ember-glow{
+    position:absolute; top:-10%; left:50%; transform:translateX(-50%);
+    width:140vw; height:60vh;
+    background:radial-gradient(ellipse at center, rgba(168,38,58,.25), transparent 70%);
+    pointer-events:none; filter:blur(20px);
+  }
+
+  h1,h2,h3{ font-family:'Marcellus', serif; font-weight:400; letter-spacing:.02em; }
+  em{ font-family:'Cormorant Garamond', serif; font-style:italic; }
+
+  .eyebrow{
+    font-family:'Jost', sans-serif; font-size:.7rem; letter-spacing:.35em;
+    text-transform:uppercase; color:#c9975a; margin-bottom:1.4rem; opacity:.85;
+  }
+
+  .btn{
+    font-family:'Jost', sans-serif; font-size:.85rem; letter-spacing:.15em; text-transform:uppercase;
+    background:transparent; color:#f3e9e2; border:1px solid rgba(201,151,90,.5);
+    padding:.9rem 2.4rem; border-radius:999px; cursor:pointer;
+    transition:all .4s ease; position:relative; overflow:hidden;
+  }
+  .btn:hover{ border-color:#c9975a; box-shadow:0 0 30px rgba(168,38,58,.4); background:rgba(201,151,90,.08); }
+  .btn:focus-visible{ outline:2px solid #c9975a; outline-offset:3px; }
+
+  /* ============ SCREEN 1 : LOCK ============ */
+  #lock{ }
+  .locket{
+    width:110px; height:110px; border-radius:50%;
+    border:1px solid rgba(201,151,90,.6);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:1.8rem; position:relative;
+    box-shadow:0 0 40px rgba(168,38,58,.35);
+    animation:pulse 3.2s ease-in-out infinite;
+  }
+  .locket-inner{
+    width:88%; height:88%; border-radius:50%; overflow:hidden;
+    background:linear-gradient(145deg,#3a1418,#1a0d0f);
+    display:flex; align-items:center; justify-content:center; font-size:2rem;
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 30px rgba(168,38,58,.3); }
+    50%{ box-shadow:0 0 55px rgba(168,38,58,.6); }
+  }
+
+  .lock-title{ font-size:2rem; letter-spacing:.12em; text-transform:uppercase; margin-bottom:.6rem; }
+  .lock-hint{ font-size:.78rem; color:#8a7873; margin-bottom:2.2rem; max-width:280px; }
+
+  .pin-display{
+    display:flex; gap:.9rem; margin-bottom:2rem;
+  }
+  .pin-dot{
+    width:14px; height:14px; border-radius:50%; border:1px solid rgba(201,151,90,.5);
+    transition:all .25s ease;
+  }
+  .pin-dot.filled{ background:#a8263a; border-color:#a8263a; box-shadow:0 0 12px rgba(168,38,58,.8); }
+  .pin-dot.shake{ animation:shakeDot .5s; }
+  @keyframes shakeDot{
+    0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); }
+  }
+
+  .keypad{
+    display:grid; grid-template-columns:repeat(3,64px); gap:14px;
+  }
+  .key{
+    width:64px; height:64px; border-radius:50%;
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08);
+    color:#f3e9e2; font-size:1.1rem; font-family:'Jost'; cursor:pointer;
+    transition:all .2s ease;
+  }
+  .key:hover{ background:rgba(201,151,90,.15); border-color:rgba(201,151,90,.4); }
+  .key:active{ transform:scale(.92); }
+
+  #lock.wrong .locket{ animation:shakeBox .45s; }
+  @keyframes shakeBox{
+    0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-8px); } 40%{ transform:translateX(8px); }
+    60%{ transform:translateX(-6px); } 80%{ transform:translateX(6px); }
+  }
+
+  /* ============ SCREEN 2 : SPECIAL DAY ============ */
+  #special{ display:none; }
+  .sleepy{ font-size:3.2rem; margin-bottom:1.6rem; opacity:.9; animation:float 4s ease-in-out infinite; }
+  @keyframes float{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-14px);} }
+  #special h1{ font-size:clamp(1.8rem,5vw,2.6rem); margin-bottom:1rem; }
+  #special p{ color:#c9a89c; font-size:1rem; margin-bottom:2.4rem; max-width:340px; }
+
+  /* ============ SCREEN 3 : COUNTDOWN ============ */
+  #countdown{ display:none; }
+  #countdown h1{ font-size:clamp(2rem,6vw,3.2rem); margin-bottom:.6rem; }
+  #countdown .sub{ color:#8a7873; font-size:.85rem; margin-bottom:2.6rem; letter-spacing:.08em; }
+  .stats{ display:flex; gap:2.6rem; margin-bottom:3rem; }
+  .stat-num{ font-family:'Marcellus',serif; font-size:clamp(2.4rem,7vw,3.6rem); color:#f3e9e2; line-height:1; }
+  .stat-num span{ color:#a8263a; }
+  .stat-label{ font-size:.65rem; letter-spacing:.25em; text-transform:uppercase; color:#8a7873; margin-top:.6rem; }
+
+  /* ============ SCREEN 4 : MEMORIES ============ */
+  #memories{ display:none; padding-top:10vh; padding-bottom:10vh; }
+  #memories h2{ font-size:clamp(1.6rem,5vw,2.4rem); margin-bottom:.5rem; }
+  #memories .sub{ color:#8a7873; font-size:.8rem; margin-bottom:2.8rem; letter-spacing:.1em; }
+
+  .gallery{
+    display:flex; gap:1.4rem; overflow-x:auto; scroll-snap-type:x mandatory;
+    max-width:100%; padding:1rem 6vw; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .gallery::-webkit-scrollbar{ display:none; }
+
+  .photo-card{
+    flex:0 0 240px; height:320px; border-radius:14px; scroll-snap-align:center;
+    background:linear-gradient(155deg,#2a1416,#150b0c);
+    border:1px solid rgba(201,151,90,.25);
+    display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .photo-card img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-card .placeholder-label{
+    font-size:.7rem; color:#6b5a55; letter-spacing:.1em; text-transform:uppercase; padding:1rem;
+  }
+
+  #memories .btn{ margin-top:3rem; }
+
+  /* ============ SCREEN 5 : MESSAGE ============ */
+  #message{ display:none; }
+  #message .heart{ font-size:2.2rem; margin-bottom:1.4rem; color:#a8263a; }
+  #message h2{ font-size:clamp(1.6rem,5vw,2.2rem); margin-bottom:2rem; }
+  .letter{
+    max-width:480px; font-family:'Cormorant Garamond', serif; font-size:1.25rem;
+    line-height:1.9; color:#e8d9d1; display:none;
+  }
+  .letter.visible{ display:block; animation:fadeUp 1.2s ease; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(16px);} to{ opacity:1; transform:translateY(0);} }
+  .signoff{ margin-top:2rem; font-family:'Marcellus',serif; color:#c9975a; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<!-- ================= SCREEN 1: LOCK ================= -->
+<section id="lock">
+  <div class="ember-glow"></div>
+  <div class="locket"><div class="locket-inner">🔒</div></div>
+  <div class="lock-title">Locked</div>
+  <div class="lock-hint">Enter the date that changed everything.</div>
+  <div class="pin-display" id="pinDisplay">
+    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="keypad" id="keypad">
+    <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+    <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+    <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+    <button class="key" data-k="back">⌫</button><button class="key" data-k="0">0</button><button class="key" data-k="ok">•</button>
+  </div>
+</section>
+
+<!-- ================= SCREEN 2: SPECIAL DAY ================= -->
+<section id="special">
+  <div class="ember-glow"></div>
+  <div class="eyebrow">A little something</div>
+  <div class="sleepy">🌙</div>
+  <h1>It's Your Special Day</h1>
+  <p>I made something just for you. Take your time.</p>
+  <button class="btn" onclick="showScreen('countdown')">Begin</button>
+</section>
+
+<!-- ================= SCREEN 3: COUNTDOWN ================= -->
+<section id="countdown">
+  <div class="ember-glow"></div>
+  <div class="eyebrow" id="nameLine">Happy Birthday</div>
+  <h1 id="nameHeading">My Love</h1>
+  <div class="sub">You have completed</div>
+  <div class="stats">
+    <div><div class="stat-num" id="yearsNum">0</div><div class="stat-label">Years</div></div>
+    <div><div class="stat-num" id="monthsNum">0</div><div class="stat-label">Months</div></div>
+    <div><div class="stat-num" id="daysNum">0</div><div class="stat-label">Days</div></div>
+  </div>
+  <button class="btn" onclick="showScreen('memories')">Next</button>
+</section>
+
+<!-- ================= SCREEN 4: MEMORIES ================= -->
+<section id="memories">
+  <div class="eyebrow">Look Back</div>
+  <h2>Special Memories</h2>
+  <div class="sub">Swipe for more →</div>
+  <div class="gallery">
+    <!-- ============================================================
+         Just save your photos next to this html file, named:
+         photo1.jpg, photo2.jpg, photo3.jpg, photo4.jpg
+         (jpg or png both fine — keep the numbers 1-4)
+         Nothing else to edit — they'll show up automatically.
+         ============================================================ -->
+    <div class="photo-card"><img src="photo1.jpg" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-label&quot;>Photo 1<br>add photo1.jpg</div>'"></div>
+    <div class="photo-card"><img src="photo2.jpg" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-label&quot;>Photo 2<br>add photo2.jpg</div>'"></div>
+    <div class="photo-card"><img src="photo3.jpg" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-label&quot;>Photo 3<br>add photo3.jpg</div>'"></div>
+    <div class="photo-card"><img src="photo4.jpg" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder-label&quot;>Photo 4<br>add photo4.jpg</div>'"></div>
+  </div>
+  <button class="btn" onclick="showScreen('message')">Read My Message</button>
+</section>
+
+<!-- ================= SCREEN 5: MESSAGE ================= -->
+<section id="message">
+  <div class="ember-glow"></div>
+  <div class="heart">♥</div>
+  <h2>For You</h2>
+  <button class="btn" id="revealBtn" onclick="revealLetter()">Open the Letter</button>
+  <div class="letter" id="letterText">
+    <!-- ============================================================
+         EDIT THIS LETTER — write whatever you want to say to her.
+         ============================================================ -->
+    Happy Birthday, <span id="letterName">my love</span>.<br><br>
+    Every year with you feels shorter than the last, because time moves
+    differently when it's spent beside someone you love. Thank you for
+    every quiet morning, every loud laugh, every hard day you made softer
+    just by being there.<br><br>
+    Here's to another year of us.
+    <div class="signoff">— Always yours</div>
+  </div>
+</section>
+
+<script>
+  /* ============================================================
+     EDIT THESE THREE LINES — that's all you need to customize
+     ============================================================ */
+  const HER_NAME   = "My Love";        // her name, e.g. "Ayesha"
+  const BIRTHDATE  = "2004-12-31";     // YYYY-MM-DD, used for the countdown
+  const PASSCODE   = "2004";           // the 4-digit unlock code
+
+  document.getElementById('nameHeading').textContent = "Happy Birthday, " + HER_NAME;
+  document.getElementById('letterName').textContent = HER_NAME;
+
+  // ---- Countdown calculation ----
+  function calcAge(birthISO){
+    const b = new Date(birthISO);
+    const now = new Date();
+    let years = now.getFullYear() - b.getFullYear();
+    let months = now.getMonth() - b.getMonth();
+    let days = now.getDate() - b.getDate();
+    if(days < 0){
+      months -= 1;
+      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if(months < 0){ years -= 1; months += 12; }
+    return {years, months, days};
+  }
+  function animateCount(el, target){
+    let cur = 0;
+    const step = Math.max(1, Math.ceil(target/30));
+    const t = setInterval(()=>{
+      cur += step;
+      if(cur >= target){ cur = target; clearInterval(t); }
+      el.textContent = cur;
+    }, 30);
+  }
+
+  // ---- Screen navigation ----
+  function showScreen(id){
+    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+    const target = document.getElementById(id);
+    target.style.display = 'flex';
+    if(id === 'countdown'){
+      const {years, months, days} = calcAge(BIRTHDATE);
+      animateCount(document.getElementById('yearsNum'), years);
+      animateCount(document.getElementById('monthsNum'), months);
+      animateCount(document.getElementById('daysNum'), days);
+    }
+  }
+
+  function revealLetter(){
+    document.getElementById('letterText').classList.add('visible');
+    document.getElementById('revealBtn').style.display = 'none';
+  }
+
+  // ---- Lock screen keypad ----
+  let entered = '';
+  const dots = document.querySelectorAll('.pin-dot');
+  const lockSection = document.getElementById('lock');
+
+  document.getElementById('keypad').addEventListener('click', (e)=>{
+    const key = e.target.closest('.key');
+    if(!key) return;
+    const k = key.dataset.k;
+
+    if(k === 'back'){
+      entered = entered.slice(0, -1);
+      updateDots();
+      return;
+    }
+    if(k === 'ok'){
+      checkCode();
+      return;
+    }
+    if(entered.length < 4){
+      entered += k;
+      updateDots();
+      if(entered.length === 4){
+        setTimeout(checkCode, 200);
+      }
+    }
+  });
+
+  function updateDots(){
+    dots.forEach((d,i)=> d.classList.toggle('filled', i < entered.length));
+  }
+
+  function checkCode(){
+    if(entered === PASSCODE){
+      lockSection.style.display = 'none';
+      showScreen('special');
+    } else {
+      dots.forEach(d => { d.classList.add('shake'); setTimeout(()=>d.classList.remove('shake'),500); });
+      lockSection.classList.add('wrong');
+      setTimeout(()=>{
+        lockSection.classList.remove('wrong');
+        entered = '';
+        updateDots();
+      }, 500);
+    }
+  }
+
+  // keyboard support for desktop testing
+  window.addEventListener('keydown', (e)=>{
+    if(lockSection.style.display === 'none') return;
+    if(/^[0-9]$/.test(e.key) && entered.length < 4){
+      entered += e.key; updateDots();
+      if(entered.length === 4) setTimeout(checkCode, 200);
+    } else if(e.key === 'Backspace'){
+      entered = entered.slice(0,-1); updateDots();
+    } else if(e.key === 'Enter'){
+      checkCode();
+    }
+  });
+</script>
+
+</body>
+</html>
